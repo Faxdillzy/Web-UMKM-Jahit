@@ -186,4 +186,181 @@
                 // Biarkan default behavior untuk scroll
             }, { passive: true });
 
+            // Gallery Zoom Modal Functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const galleryItems = document.querySelectorAll('.gallery-item');
+    const galleryModal = document.createElement('div');
+    const modalContent = document.createElement('div');
+    const modalImg = document.createElement('img');
+    const modalClose = document.createElement('div');
+    const modalPrev = document.createElement('div');
+    const modalNext = document.createElement('div');
+    const modalCaption = document.createElement('div');
+    const modalCounter = document.createElement('div');
+    const modalLoading = document.createElement('div');
+    
+    let currentImageIndex = 0;
+    const galleryImages = [];
+    
+    // Setup modal structure
+    galleryModal.className = 'gallery-modal';
+    modalContent.className = 'gallery-modal-content';
+    modalImg.className = 'gallery-modal-img';
+    modalClose.className = 'gallery-modal-close';
+    modalClose.innerHTML = '×';
+    modalPrev.className = 'gallery-modal-prev';
+    modalPrev.innerHTML = '❮';
+    modalNext.className = 'gallery-modal-next';
+    modalNext.innerHTML = '❯';
+    modalCaption.className = 'gallery-modal-caption';
+    modalCounter.className = 'gallery-modal-counter';
+    modalLoading.className = 'gallery-modal-loading';
+    
+    // Build modal navigation
+    const modalNav = document.createElement('div');
+    modalNav.className = 'gallery-modal-nav';
+    modalNav.appendChild(modalPrev);
+    modalNav.appendChild(modalNext);
+    
+    // Assemble modal
+    modalContent.appendChild(modalImg);
+    modalContent.appendChild(modalCaption);
+    modalContent.appendChild(modalCounter);
+    modalContent.appendChild(modalClose);
+    modalContent.appendChild(modalNav);
+    modalContent.appendChild(modalLoading);
+    galleryModal.appendChild(modalContent);
+    document.body.appendChild(galleryModal);
+    
+    // Collect gallery images
+    galleryItems.forEach((item, index) => {
+        const img = item.querySelector('img');
+        const alt = img.getAttribute('alt') || `Gambar ${index + 1}`;
+        
+        galleryImages.push({
+            src: img.src,
+            alt: alt
+        });
+        
+        // Add click event to each gallery item
+        item.addEventListener('click', () => {
+            currentImageIndex = index;
+            openModal();
+        });
+    });
+    
+    // Function to open modal
+    function openModal() {
+        const currentImage = galleryImages[currentImageIndex];
+        
+        // Show loading
+        modalLoading.style.display = 'block';
+        modalImg.style.opacity = '0';
+        
+        // Load image
+        modalImg.src = currentImage.src;
+        modalImg.alt = currentImage.alt;
+        modalCaption.textContent = currentImage.alt;
+        modalCounter.textContent = `${currentImageIndex + 1} / ${galleryImages.length}`;
+        
+        // When image is loaded
+        modalImg.onload = function() {
+            modalLoading.style.display = 'none';
+            modalImg.style.opacity = '1';
+            galleryModal.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevent scrolling
+        };
+        
+        // Handle image load error
+        modalImg.onerror = function() {
+            modalLoading.style.display = 'none';
+            modalImg.alt = 'Gagal memuat gambar';
+            modalCaption.textContent = 'Gagal memuat gambar';
+        };
+    }
+    
+    // Function to close modal
+    function closeModal() {
+        galleryModal.classList.remove('active');
+        setTimeout(() => {
+            document.body.style.overflow = 'auto'; // Re-enable scrolling
+        }, 300);
+    }
+    
+    // Navigate to previous image
+    function prevImage() {
+        currentImageIndex = (currentImageIndex - 1 + galleryImages.length) % galleryImages.length;
+        openModal();
+    }
+    
+    // Navigate to next image
+    function nextImage() {
+        currentImageIndex = (currentImageIndex + 1) % galleryImages.length;
+        openModal();
+    }
+    
+    // Event listeners for modal controls
+    modalClose.addEventListener('click', closeModal);
+    modalPrev.addEventListener('click', (e) => {
+        e.stopPropagation();
+        prevImage();
+    });
+    modalNext.addEventListener('click', (e) => {
+        e.stopPropagation();
+        nextImage();
+    });
+    
+    // Close modal when clicking outside the image
+    galleryModal.addEventListener('click', (e) => {
+        if (e.target === galleryModal) {
+            closeModal();
+        }
+    });
+    
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+        if (!galleryModal.classList.contains('active')) return;
+        
+        switch(e.key) {
+            case 'Escape':
+                closeModal();
+                break;
+            case 'ArrowLeft':
+                prevImage();
+                break;
+            case 'ArrowRight':
+                nextImage();
+                break;
+        }
+    });
+    
+    // Touch swipe for mobile
+    let touchStartX = 0;
+    let touchEndX = 0;
+    
+    modalContent.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+    
+    modalContent.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    }, { passive: true });
+    
+    function handleSwipe() {
+        const swipeThreshold = 50;
+        const diff = touchStartX - touchEndX;
+        
+        if (Math.abs(diff) > swipeThreshold) {
+            if (diff > 0) {
+                // Swipe left - next image
+                nextImage();
+            } else {
+                // Swipe right - previous image
+                prevImage();
+            }
+        }
+    }
+});
+
         })();
